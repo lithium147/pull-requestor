@@ -1,0 +1,3 @@
+Fix improper syntax:
+- remove unnecessary parenthesis
+- remove public from interface methods

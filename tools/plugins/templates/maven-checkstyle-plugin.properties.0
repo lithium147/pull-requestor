@@ -1,0 +1,1 @@
+sonar.java.checkstyle.reportPaths=${project.build.directory}/checkstyle-result.xml

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.hsbc.host.raven</groupId>
+	<artifactId>pull-requestor</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<description>Forces download of maven zip, so it's pulled into internal nexus</description>
+	<properties>
+		<apache-maven.version>3.9.0</apache-maven.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>apache-maven</artifactId>
+			<version>${apache-maven.version}</version>
+			<classifier>bin</classifier>
+			<type>zip</type>
+		</dependency>
+	</dependencies>
+
+	<distributionManagement>
+		<repository>
+			<id>nexus305</id>
+			<url>https://nexus305.systems.uk.hsbc:8081/nexus/repository/maven-hsbc-internal-prod_n3p/</url>
+		</repository>
+	</distributionManagement>
+</project>

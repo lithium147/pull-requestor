@@ -1,0 +1,2 @@
+pmd.version=7.7.0
+sonar.java.pmd.reportPaths=${project.build.directory}/pmd.xml

@@ -1,0 +1,7 @@
+Interfaces are preferred to implementations as it means the implementation can be swapped easily if required.
+Currently the following collection classes are supported:
+- Set
+- Map
+- List
+
+NOTE: import might be added in the wrong place, but this will be fixed by the import automation.

@@ -1,0 +1,5 @@
+Classes with @Builder or @SuperBuilder can have final fields
+Excluding:
+- @Setter
+This might break the code if the fields are being mutated,
+but provides are good starting point to resolve the mutation.

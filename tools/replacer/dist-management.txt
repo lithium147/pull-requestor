@@ -1,0 +1,6 @@
+    <distributionManagement>
+        <repository>
+            <id>nexus304</id>
+            <url>https://nexus304.systems.uk.hsbc:8081/nexus/repository/maven-hsbc-internal-prod_n3p</url>
+        </repository>
+    </distributionManagement>

@@ -1,0 +1,4 @@
+final is only really useful for fields, anywhere else its just noise
+- no final method params
+- no final static methods
+- no final classes

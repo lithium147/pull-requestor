@@ -1,0 +1,7 @@
+Use shorthand assertj methods
+
+Also, convert assertThatThrownBy to catchException
+- this separates the "when" and "then"
+
+Only use the standard entry point:
+    org.assertj.core.api.Assertions

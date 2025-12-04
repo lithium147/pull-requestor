@@ -1,0 +1,3 @@
+- Migrate hamcrest assertions and matchers to assertj
+- Migrate mockMvc hamcrest assertions to use mockMvc assertions
+- Using a MatchingConsumer to replace the hamcrest TypeSafeMatcher

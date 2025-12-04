@@ -1,0 +1,1 @@
+Dos line endings can cause problems with scripting tools so better not to have them

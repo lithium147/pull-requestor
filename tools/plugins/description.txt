@@ -1,0 +1,1 @@
+Align maven plugins with template version

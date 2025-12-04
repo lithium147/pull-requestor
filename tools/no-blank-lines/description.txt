@@ -1,0 +1,7 @@
+Clean up blanks lines by:
+- Squeezing many blank lines into one blank line.
+- removing white space at end of lines.
+- removing blank lines after opening braces.
+- removing blank lines before closing braces.
+- removing blank lines at the beginning of the file.
+- add blank a line before top level properties in yaml files.

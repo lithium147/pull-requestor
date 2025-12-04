@@ -1,0 +1,13 @@
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.5.2</version>
+    <configuration>
+        <workingDirectory>${project.build.directory}</workingDirectory>
+        <!--suppress MavenModelInspection -->
+        <skip>${skipSurefire}</skip>
+        <systemPropertyVariables>
+            <spring.profiles.active>test</spring.profiles.active>
+        </systemPropertyVariables>
+    </configuration>
+</plugin>

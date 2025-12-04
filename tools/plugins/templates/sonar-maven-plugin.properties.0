@@ -1,0 +1,4 @@
+sonar.sources=.
+sonar.tests=src/test
+sonar.exclusions=src/test/**
+sonar.coverage.exclusions=**/*.js

@@ -1,0 +1,92 @@
+<ruleset comparisonMethod="maven"
+         xmlns="https://www.mojohaus.org/VERSIONS/RULE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://www.mojohaus.org/VERSIONS/RULE/2.1.0 https://www.mojohaus.org/versions/versions-model/xsd/rule-2.1.0.xsd">
+    <rules>
+        <!-- ignore the raven libs based on spring boot 3 -->
+        <rule groupId="com.hsbc.host.raven" artifactId="raven-security-util" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">.*-java8</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <rule groupId="com.hsbc.host.raven" artifactId="raven-configuration-util" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">.*-java8</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <rule groupId="com.hsbc.host.raven" artifactId="raven-gcp-client" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">.*-java8</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <rule groupId="com.hsbc.host.raven" artifactId="raven-path-util" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">.*-java8</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+
+        <!-- not ready for spring-boot-admin 3.0.0 yet -->
+        <rule groupId="de.codecentric" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">3\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for tomcat 10.0.0 yet -->
+        <rule groupId="org.apache.tomcat.embed" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">10\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for spring 6.0.0 yet -->
+        <rule groupId="org.springframework" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">6\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for spring batch 5.0.0 yet -->
+        <rule groupId="org.springframework.batch" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">5\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for spring boot 3.0.0 yet -->
+        <rule groupId="org.springframework.boot" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">3\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for spring retry 2.0.0 yet -->
+        <rule groupId="org.springframework.retry" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for spring cloud 2022.* yet, also 4.0.0 -->
+        <rule groupId="org.springframework.cloud" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">2022\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">2023\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">2024\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">4\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for 7 or 8 -->
+        <rule groupId="org.hibernate.validator" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">7\.\d+\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">8\.\d+\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        <!-- not ready for 1.4.x - this only applies to java8 projects,
+         but can be added here since the java11 projects don't specify logback explicitly -->
+        <rule groupId="ch.qos.logback" comparisonMethod="maven">
+            <ignoreVersions>
+                <ignoreVersion type="regex">1\.4\.\d+.*</ignoreVersion>
+                <ignoreVersion type="regex">1\.5\.\d+.*</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+    </rules>
+</ruleset>

@@ -1,0 +1,61 @@
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <!--suppress MavenModelInspection -->
+        <skip>${skipTests}</skip>
+        <!--suppress MavenModelInspection -->
+        <jmxPort>${jmx.port}</jmxPort>
+        <workingDirectory>${project.build.directory}</workingDirectory>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>build-info</goal>
+            </goals>
+            <configuration>
+                <additionalProperties>
+                    <description>${project.description}</description>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <developer.name>${project.developers[0].name}</developer.name>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <developer.email>${project.developers[0].email}</developer.email>
+                    <externalDocs.url>${project.ciManagement.url}/job/main/javadoc/index.html</externalDocs.url>
+                    <externalDocs.description>javadocs</externalDocs.description>
+                </additionalProperties>
+            </configuration>
+        </execution>
+        <execution>
+            <id>pre-integration-test</id>
+            <goals>
+                <goal>start</goal>
+            </goals>
+            <configuration>
+                <!--suppress UnresolvedMavenProperty -->
+                <jvmArguments>${argLine}</jvmArguments>
+                <!-- systemPropertyVariables require fork mode, so use arguments -->
+                <arguments>
+                    <!--suppress MavenModelInspection -->
+                    <argument>--server.port=${tomcat.http.port}</argument>
+                    <argument>--spring.cloud.config.enabled=false</argument>
+                </arguments>
+                <wait>4000</wait>        <!-- Gives more time for startup as 30secs is not enough -->
+                <maxAttempts>60</maxAttempts>
+                <useTestClasspath>true</useTestClasspath>
+                <directories>
+                    <directory>${project.build.outputDirectory}</directory>
+                    <directory>${project.build.testOutputDirectory}</directory>
+                </directories>
+                <profiles>
+                    <profile>test</profile>
+                </profiles>
+            </configuration>
+        </execution>
+        <execution>
+            <id>post-integration-test</id>
+            <goals>
+                <goal>stop</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>

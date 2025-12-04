@@ -1,0 +1,35 @@
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-enforcer-plugin</artifactId>
+    <version>3.5.0</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <rules>
+            <banDynamicVersions>
+                <excludedScopes/>
+            </banDynamicVersions>
+            <banDuplicatePomDependencyVersions/>
+            <requireReleaseDeps/>
+            <!-- <requireReleaseVersion/> snapshot version can be prevented by removing the snapshot repo -->
+            <bannedDependencies>
+                <excludes>
+                    <exclude>javax.validation:javax.validation-api</exclude>
+                    <exclude>jakarta.annotation:jakarta.annotation-api:2.*</exclude>
+                    <exclude>jakarta.annotation:jakarta.annotation-api:3.*</exclude>
+                    <exclude>org.bouncycastle:bcpkix-jdk15on</exclude>
+                    <exclude>org.bouncycastle:bcprov-jdk15on</exclude>
+                </excludes>
+            </bannedDependencies>
+            <dependencyConvergence>
+                <!-- This is impossible to achieve, but useful to see in build output -->
+                <level>WARN</level>
+            </dependencyConvergence>
+        </rules>
+    </configuration>
+</plugin>

@@ -1,0 +1,7 @@
+Migrate java/junit4/junit5 assertions to assertj
+- Removes use of the native java assertion:
+    assert ...
+- Removes use of the following for junit4:
+    org.junit.Assert
+- Removes use of the following for junit5:
+    org.junit.jupiter.api.Assertions

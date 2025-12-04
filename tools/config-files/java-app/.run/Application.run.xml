@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Application" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="com.hsbc.host.raven.foxvatrade.Application" />
+    <module name="fo-xva-trade-service" />
+    <option name="VM_PARAMETERS" value="-ea -Dspring.output.ansi.enabled=always -Dspring.profiles.active=sit -Dspring.cloud.config.enabled=false -Dspring.cloud.bootstrap.enabled=true" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/target" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

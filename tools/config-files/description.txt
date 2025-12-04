@@ -1,0 +1,5 @@
+Install standard config files:
+- .editorconfig: prevents wildcard imports
+- lombok.config: copyableAnnotations supports builder pattern
+- Application.run.xml: runner for intellij
+- checkstyle.xml: rules for checkstyle

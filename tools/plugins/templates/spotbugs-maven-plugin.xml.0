@@ -1,0 +1,17 @@
+<plugin>
+    <groupId>com.github.spotbugs</groupId>
+    <artifactId>spotbugs-maven-plugin</artifactId>
+    <version>4.8.6.5</version>
+    <configuration>
+        <failOnError>false</failOnError>
+        <effort>max</effort>
+        <excludeFilterFile>src/test/xml/spotbugs.xml</excludeFilterFile>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>

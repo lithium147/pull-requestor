@@ -1,0 +1,9 @@
+Using builders allows for immutable classes.
+Migrates @Data classes to use @Builder/@SuperBuilder.
+@Data is equivalent to @Getter @Setter @RequiredArgsConstructor @ToString @EqualsAndHashCode.
+But @EqualsAndHashCode and @Setter are dropped which won't work if class is mutated or used in a Set.
+@RequiredArgsConstructor is not required since @Builder provides a constructor.
+Excluding:
+- Config - requires nested builder classes, and not much to gain
+- Entity - these classes might be mutated by the orm
+@Jacksonized - lets jackson know about the builder for deserialization

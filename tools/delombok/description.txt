@@ -1,0 +1,2 @@
+Lombok is great for pojo's, but anything else is going too far.
+- @UtilityClass - only saves a couple of lines of code and empty private constructor doesn't affect coverage.

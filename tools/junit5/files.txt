@@ -1,0 +1,1 @@
+src/test/java/**/*Test.java src/test/java/**/*Tests.java src/test/java/**/*Runner.java src/test/java/**/*IT.java

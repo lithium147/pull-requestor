@@ -1,0 +1,1 @@
+Use uppercase for hex literals in java source code

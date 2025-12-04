@@ -1,0 +1,4 @@
+Remove or add white space:
+- remove trailing whitespace from lines
+- remove whitespace around annotations
+- add a white space before opening brace

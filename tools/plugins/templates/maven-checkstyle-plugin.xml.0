@@ -1,0 +1,29 @@
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-checkstyle-plugin</artifactId>
+    <version>3.6.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>10.20.1</version>
+        </dependency>
+    </dependencies>
+    <executions>
+        <execution>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <failOnViolation>false</failOnViolation>
+        <includeTestSourceDirectory>true</includeTestSourceDirectory>
+        <configLocation>src/test/xml/checkstyle.xml</configLocation>
+        <consoleOutput>true</consoleOutput>
+        <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+        </sourceDirectories>
+    </configuration>
+</plugin>

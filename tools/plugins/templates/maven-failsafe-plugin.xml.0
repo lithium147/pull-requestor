@@ -1,0 +1,18 @@
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <version>3.5.2</version>
+    <configuration>
+        <workingDirectory>${project.build.directory}</workingDirectory>
+        <failIfNoTests>true</failIfNoTests> <!-- prevent tests from disappearing -->
+        <enableAssertions>true</enableAssertions>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>

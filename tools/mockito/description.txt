@@ -1,0 +1,2 @@
+Don't use @Mock annotation since it prevents use of private final fields
+- Supports RETURNS_DEEP_STUBS option

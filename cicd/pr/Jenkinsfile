@@ -1,0 +1,287 @@
+#!/usr/bin/env groovy   // encourage syntax highlighting
+
+import com.cloudbees.groovy.cps.NonCPS
+
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+boolean isPrimaryBranch = env.BRANCH_IS_PRIMARY ?: false
+// XXX BRANCH_IS_PRIMARY is not working
+isPrimaryBranch = true
+
+// String projectCredentials = 'enterprise-risk-jenkins'
+String projectCredentials = 'SAST-github-token'
+
+pipeline {
+    options {
+        timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: isPrimaryBranch ? '120' : '10'))
+    }
+
+    parameters {
+        string(name: 'PR_TOOL', description: 'The script to run that will produce a PR', trim: true)
+        string(name: 'PROJECT', description: 'The project to run the script on', trim: true)
+        string(name: 'AGENT', description: 'The agent label to run on', trim: true)
+        choice name: 'PR_ACTION', choices: ['pull-request', 'push', 'none'], description: 'what to do with the changes?'
+        string(name: 'SRC_BRANCH', description: 'The branch to checkout, leave empty for primary branch', trim: true)
+        string(name: 'CHANGE_BRANCH', description: 'The branch to make changes in, leave empty for pr/tool', trim: true)
+        string(name: 'DST_BRANCH', description: 'The branch to submit the pr to, leave empty for same branch as src', trim: true)
+        string(name: 'CUSTOM_PARAM1', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM2', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM3', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM4', description: 'Extra tool specific params')
+    }
+
+//  bart-service-account
+//  raven-snp-devops
+//  DCD_AUTH_CREDS
+//  GB-SVC-RAVENCR
+
+    agent {
+        label params.AGENT ?: 'cm-linux'
+    }
+
+    tools {
+        git 'GIT_linux-2.40.1'
+    }
+
+    environment {
+//    USER = 'jenkins'
+
+        GIT_TRACE = 0
+        GIT_CURL_VERBOSE = ''
+        GITHUB_ORGANISATION = 'raven-cr'
+        GITHUB_USER = 'raven-cr'    // required by hub when using github app auth
+
+        // recognised by hub
+        GITHUB_HOST = 'alm-github.systems.uk.hsbc'
+        GIT_AUTH = credentials('SAST-github-token')
+        GITHUB_TOKEN = "${env.GIT_AUTH_PSW}"
+
+//    JAVA_HOME='/usr/lib/jvm/java-1.11.0-openjdk-amd64'
+//        JAVA_HOME = tool '11.0.12_Linux' ---- doesn't have the certs it seems
+//        05:51:42  Caused by: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+        JAVA_HOME = tool '11.0.3_Linux'
+        MAVEN_HOME = tool '3.9.4_Linux'
+        // use an alternate local repo to ensure local builds are not picked up by mvn-versions
+        MAVEN_OPTS = "-Djansi.force=true -Dstyle.color=always -Dmaven.repo.local=$HOME/.m2-pr"
+
+        PR_TOOL_ROOT = pwd(tmp: true)
+        PR_TOOL_PATH = "$PR_TOOL_ROOT/$PR_TOOL"
+        PR_UTIL_ROOT = pwd(tmp: true)
+        PR_UTIL_PATH = "$PR_UTIL_ROOT/pr_utils"
+        PATH = "/build_tools/jq/1.5:$PR_UTIL_PATH/hub/bin:$PR_UTIL_PATH/gh/bin:${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    currentBuild.displayName = "#${currentBuild.number} ${PR_TOOL} ${PROJECT}"
+
+                    // install hub before its wiped from the workspace
+                    sh '''
+                      # ls -aL /build_tools/ || true
+                      # ls -aL /build_tools/*/ || true
+                      # jdk 17: /build_tools/jdk/1.17.0.2
+                      rm -rf ${PR_UTIL_PATH}
+                      mkdir -p ${PR_UTIL_PATH}
+                      tar -xf bin/hub-linux-amd64-2.14.2.tgz --directory=${PR_UTIL_PATH}
+                      tar -xf bin/gh_2.21.2_linux_amd64.tar.gz --directory=${PR_UTIL_PATH}
+                      cd ${PR_UTIL_PATH}
+                      mv hub* hub
+                      mv gh* gh
+                      hub --version
+                      gh --version
+                      echo $GIT_AUTH_PSW | gh auth login --hostname $GITHUB_HOST --with-token
+                    '''
+
+                    sh 'set'
+                    cleanWs() // clean the default checkout so it doesn't interfere with project checkout below
+                    // Determine pr job name programmatically
+                    BUILD_JOB_NAME = determineBuildJobName()
+                    copyArtifacts fingerprintArtifacts: true, projectName: BUILD_JOB_NAME //, selector: upstream()
+                    sh '''
+                      rm -rf $PR_TOOL_PATH
+                      mkdir -p $PR_TOOL_PATH
+                    '''
+                    unzip dir: "$PR_TOOL_PATH", zipFile: "${PR_TOOL}.zip"
+                    sh '''
+                      # TODO use globstar
+                      chmod +x $PR_TOOL_PATH/*.sh || true
+                      chmod +x $PR_TOOL_PATH/*/*.sh || true
+                      chmod +x $PR_TOOL_PATH/*/*/*.sh || true
+                      if [ -e $PR_TOOL_PATH/util ]; then
+                        rm -rf $PR_TOOL_ROOT/util
+                        mv $PR_TOOL_PATH/util $PR_TOOL_ROOT/
+                      fi
+                      rm -f *.zip
+                    '''
+
+                    def primaryBranch
+                    if (!params.SRC_BRANCH) {
+                        // ref: refs/heads/main	HEAD
+                        sh '''
+                          git ls-remote --symref https://${GIT_AUTH}@${GITHUB_HOST}/${GITHUB_ORGANISATION}/${PROJECT} HEAD
+                        '''
+                        primaryBranch = sh(returnStdout: true,
+                                script: 'git ls-remote --symref https://${GIT_AUTH}@${GITHUB_HOST}/${GITHUB_ORGANISATION}/${PROJECT} HEAD | head -n 1 | sed -E \'s|^.*heads/([^ \\t]+)[ \\t]+.*$|\\1|\' ')
+                                .trim()
+                        echo 'determined primary branch as ' + primaryBranch
+                        env.SRC_BRANCH = primaryBranch
+                    } else {
+                        env.SRC_BRANCH = params.SRC_BRANCH
+                    }
+                    env.DST_BRANCH = params.DST_BRANCH ?: env.SRC_BRANCH
+                    env.CHANGE_BRANCH = params.CHANGE_BRANCH ?: "pr/$PR_TOOL"
+
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    String projectUrl = 'https://' + GITHUB_HOST + '/' + GITHUB_ORGANISATION + '/' + PROJECT + '.git'
+                    def scmResponse = checkout scmGit(
+                            branches: [[name: env.SRC_BRANCH]], gitTool: 'GIT_linux-2.40.1',
+                            userRemoteConfigs: [[credentialsId: projectCredentials, url: projectUrl]])
+                    echo "scmResponse: $scmResponse"
+//                     git gitTool: 'GIT_linux-2.40.1', branch: env.SRC_BRANCH, url: 'https://' + GITHUB_HOST + '/' + GITHUB_ORGANISATION + '/' + PROJECT + '.git', credentialsId: projectCredentials
+                    sh '''
+                      # required to be able to commit/push to git
+                      git config user.name "enterprise-risk-jenkins"
+                      git config user.email "enterprise-risk-jenkins_do_not_reply@hsbc.com"
+                      git remote set-url origin "https://${GIT_AUTH}@${GITHUB_HOST}/${GITHUB_ORGANISATION}/${PROJECT}.git"
+                      git config --add hub.host $GITHUB_HOST
+                    '''
+//                     sh 'find ~/.m2 -name "*.lastUpdated" -exec grep -q "Could not transfer" {} \\; -print -exec rm {} \\;'
+//                     sh 'find ~/.m2/TRADED_RISK/ -name "*.lastUpdated"'
+// https://nexus304.systems.uk.hsbc:8081/nexus/repository/prd/org/projectlombok/lombok/maven-metadata.xml
+//                     echo 'm2 cleanup'
+//                     sh 'ls -l ~/.m2/TRADED_RISK/'
+//                     sh 'find ~/.m2/TRADED_RISK/ -name "*.pom.lastUpdated" -exec grep -q "Could not transfer" {} \\; -print -exec rm {} \\;'
+//                     echo 'm2 cleanup done'
+
+                }
+            }
+        }
+
+        // can it checkout the other project instead of this project?
+        // but then how to get the pr scripts?
+        // could they be passed in via a param/zip file?
+        // then unzipped on top of the checkout?
+        // probably don't want to put them on top of the current checkout as git will try to push them to the project
+        // so unzip to tmp dir
+
+        stage('run script') {
+            environment {
+                MVN = detectMvnWrapper()
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'RAVEN-SNP-DEVOPS', usernameVariable: 'MVNW_USERNAME', passwordVariable: 'MVNW_PASSWORD')]) {
+                        String nexusRepoUrl = 'https://nexus305.systems.uk.hsbc:8081/nexus/repository/prd/'
+                        withEnv(['MVNW_VERBOSE=true', 'MVNW_REPOURL=' + nexusRepoUrl]) {
+                            sh '$MVN -v'
+                            // creates this file: .mvn/wrapper/maven-wrapper.jar
+                            // so needs to be excluded from check in
+                            // perhaps can delete it immediately since its not needed after maven installed?
+                            // sh 'rm -f .mvn/wrapper/maven-wrapper.jar'
+                        }
+                    }
+                    configFileProvider([configFile(fileId: 'nexus305migration', variable: 'MVN_SETTINGS')]) {
+                        withCredentials([usernamePassword(credentialsId: "RAVEN-SNP-DEVOPS", passwordVariable: 'NEXUS3_PASSWORD', usernameVariable: 'NEXUS3_USER')]) {
+                            // pass $CUSTOM_PARAMS unquoted so they will be split
+                            def result = sh returnStatus: true, script: '$PR_TOOL_PATH/apply.sh "$PR_TOOL" "$PR_ACTION" "$SRC_BRANCH" "$CHANGE_BRANCH" "$DST_BRANCH" "$CUSTOM_PARAM1" "$CUSTOM_PARAM2" "$CUSTOM_PARAM3" "$CUSTOM_PARAM4"'
+                            if (result == 1) {
+                                appendToBuildDescription('Changed')
+                            } else if (result < 0) {
+                                error 'pr tool apply script failed with: ' + result
+                            }
+                        }
+                    }
+                    reportErrors()
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            script {
+                sh '$PR_TOOL_PATH/revert.sh "$CHANGE_BRANCH"'
+            }
+        }
+    }
+}
+
+void appendToBuildDescription(String text, String delimiter = ' ') {
+    if (currentBuild.description) {
+        currentBuild.description += delimiter + text
+    } else {
+        currentBuild.description = text
+    }
+}
+
+private String determineBuildJobName() {
+    int branchOffset
+    if (env.JOB_BASE_NAME == env.BRANCH_NAME) {
+        branchOffset = 1
+    } else {
+        branchOffset = 0
+    }
+    List<String> parts = JOB_NAME.split('/')
+    parts[parts.size() - 1 - branchOffset] = 'Build'
+    return parts.join('/')
+}
+
+Iterator<String> getBuildLogLines() {
+    return currentBuild?.rawBuild?.getLogReader()?.iterator()
+}
+
+@NonCPS
+private static String stripAnsiColours(String value) {
+    return value.replaceAll(/\x1b\[[0-9]+m/, '')
+}
+
+Collection<String> findInBuildLog(Pattern p, int groupNumber = 1, Iterator<String> lines = getBuildLogLines()) {
+    if (!lines) return []
+    long startTs = System.currentTimeMillis()
+    //log.debug("searching log lines for ~/${p}/")
+
+    List<String> matches = []
+    int numLines = 0
+    for (String line : lines) {
+        line = stripAnsiColours(line)
+        Matcher matcher = p.matcher(line)
+        // also ignore exact match to pattern as this could be from the above log statement
+        if (matcher.find() && !line.contains('searching log lines for')) matches << matcher.group(groupNumber)
+        numLines++
+    }
+
+    long endTs = System.currentTimeMillis()
+    long duration = endTs - startTs
+//     log.debug("found ${matches.size()} matches in ${numLines} lines taking ${duration} ms")
+    return matches
+}
+
+void reportErrors() {
+    Pattern pattern = ~/ERROR::(.*)/
+    Collection<String> issues = findInBuildLog(pattern)
+//     addLinesToSummary("package.png", 'Script errors', issues, true)
+    if (issues) {
+        unstable("scripts errors detected: ${issues[0]}")
+    }
+}
+
+String detectMvnWrapper() {
+    return 'mvn'    // mvn from the path
+//     if (fileExists('mvnw')) {
+//         echo 'using mvn wrapper'
+//         return './mvnw'    // mvn wrapper provided by the project
+//     } else {
+//         return 'mvn'    // mvn from the path
+//     }
+}

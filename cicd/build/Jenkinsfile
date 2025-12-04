@@ -1,0 +1,172 @@
+#!groovy
+
+boolean isPrimaryBranch = env.BRANCH_IS_PRIMARY ?: false
+// XXX BRANCH_IS_PRIMARY is not working
+isPrimaryBranch = true
+
+// run on full set if triggered by cron
+def nightlyProjects = [
+        'raven-snap-counterparty-service', 'raven-snap-counterparty-api', 'raven-snap-counterparty-beam',
+        'raven-event-notifier', 'raven-event-api', 'raven-risk-source', 'raven-gcp-client', 'fo-xva-chaperone',
+        'h2-configurer', 'raven-agreement-lib', 'raven-datamapping-common', 'project-configurer',
+        'raven-security-util', 'raven-configuration-util', 'tc-shared', 'raven-path-util', 'cr-masker',
+        'raven-commons', 'raven-beam-util', 'raven-batch-util', 'raven-flink-client', 'raven-solace-util',
+        'raven-xva-result-beam', 'raven-dataflow-client', 'raven-nola2-beam-api', 'raven-xva-stressed-orch',
+        'ravencr-userauth', 'ravencr-gateway-service', 'raven-orch-platform', 'raven-xva-python-beam',
+        'raven-xva-java-beam'
+]
+// 'raven-gcp-service'
+//          'fo-xva-trade-service', 'fo-xva-marketdata-service', 'fo-xva-eodevent-service', 'fo-xva-userauth', 'fo-xva-apigateway',
+
+def testProjects = ['raven-snap-counterparty-service', 'raven-gcp-client', 'project-configurer']
+def tools
+def allTools = []
+// TODO run mvnw weekly since it changes much less frequently
+def nightlyTools = ['mvnw', 'mvn-versions', 'mvn-parent'] //, 'imports', 'whitespace']
+// tools = ['mvnw', 'mvn-versions', 'mvn-parent',
+//          'no-dos-line-endings', 'prefer-interface', 'no-final', 'no-hamcrest', 'no-junit-assertions', 'whitespace',
+//          'uppercase-hex-digits', 'mockito', 'assertj', 'camel-case', 'builders', 'immutable', 'syntax', 'imports',
+//         'junit5', 'mvn-inline', 'no-copyright', 'no-blank-lines'
+// ]
+
+// no point running these so exclude them
+def excludedTools = ['replacer', 'mover', 'gradlew', 'dummy', 'dependabot', 'create-pr', 'sync', 'npm-audit']
+
+if (params.PR_TOOLS) {
+    tools = params.PR_TOOLS.split(' ')
+} else if (currentBuild.getBuildCauses()[0].userId) {
+    tools = null    // will be assigned to allTools later
+} else {
+    tools = nightlyTools
+}
+
+// TODO scan the github organisation for projects containing:
+// library 'raven-cr-shared-library'
+// TODO randomise the order as hitting github rate limit
+def projects
+if (params.PROJECTS) {
+    projects = params.PROJECTS.split(' ')
+// } else if (currentBuild.getBuildCauses()[0].userId) {
+//     projects = testProjects;
+} else {
+    projects = nightlyProjects;
+}
+
+pipeline {
+    agent { label 'cm-linux' }
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: isPrimaryBranch ? '60' : '10'))
+    }
+
+    parameters {
+        string(name: 'PROJECTS', description: 'Space delimited, leave empty to run on all projects', trim: true)
+        string(name: 'PR_TOOLS', description: 'Space delimited, leave empty to run all tools', trim: true)
+        string(name: 'CUSTOM_PARAM1', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM2', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM3', description: 'Extra tool specific params')
+        string(name: 'CUSTOM_PARAM4', description: 'Extra tool specific params')
+    }
+    // multiselect:
+    // https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/client-and-managed-masters/how-to-do-a-multiselect-input-in-a-pipeline
+
+    triggers {
+        cron('''
+            30 21 * * *
+            30 22 * * *
+        ''') // 9:30pm and 10:30pm (UTC) every night
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                // the archive is used by the downstream builds to perform the changes
+                // dependabot has its own applier
+//        zip archive: true, dir: 'dependabot', zipFile: 'dependabot.zip'
+
+                script {
+                    String BUILD_TRIGGER_BY = "${currentBuild.getBuildCauses()[0].shortDescription} / ${currentBuild.getBuildCauses()[0].userId}"
+                    echo "BUILD_TRIGGER_BY: ${BUILD_TRIGGER_BY}"
+
+                    sh 'set'
+                    sh 'ls /build_tools/'
+                    sh 'ls /build_tools/iq/cli/'
+                    dir('tools') {
+                        def files = findFiles()
+
+                        files.each { f ->
+                            if (f.directory) {
+                                allTools << f.name
+                                String tool = f.name
+                                String toolTmp = f.name + '-tmp'
+                                sh "mkdir -p $toolTmp"
+
+                                echo "building ${tool}.zip"
+                                sh "cp ../cicd/pr/*.* $toolTmp/"
+                                sh "rm -f $toolTmp/Jenkinsfile"
+                                // tool dir files override base files
+                                sh "cp -r $tool/* $toolTmp/"
+
+                                sh "mkdir -p $toolTmp/util/"
+                                sh "cp ../util/*.* $toolTmp/util/"
+                                zip archive: true, dir: toolTmp, zipFile: "${tool}.zip"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Trigger PR script jobs') {
+            steps {
+                script {
+                    if (tools == null) {
+                        tools = allTools - excludedTools
+                    }
+                    for (String project in projects) {
+                        for (String tool in tools) {
+                            echo "triggering $project $tool"
+                            // TODO not a very flexible way to define the agent
+                            if (tool.startsWith("npm")) {
+                                AGENT = "nodejs"
+                            } else {
+                                AGENT = 'cm-linux'
+                            }
+
+                            PR_JOB_NAME = determinePrJobName()
+                            // Since the src/dst branch might not always be master,
+                            // let the downstream job determine which branch to use
+                            build(job: PR_JOB_NAME, wait: false, propagate: false, parameters: [
+                                    [$class: 'StringParameterValue', name: 'PR_TOOL', value: tool],
+                                    [$class: 'StringParameterValue', name: 'PROJECT', value: project],
+                                    [$class: 'StringParameterValue', name: 'AGENT', value: AGENT],
+                                    [$class: 'StringParameterValue', name: 'SRC_BRANCH', value: ''],
+                                    [$class: 'StringParameterValue', name: 'CHANGE_BRANCH', value: 'pr/' + tool],
+                                    [$class: 'StringParameterValue', name: 'DST_BRANCH', value: ''],
+                                    [$class: 'StringParameterValue', name: 'CUSTOM_PARAM1', value: params.CUSTOM_PARAM1],
+                                    [$class: 'StringParameterValue', name: 'CUSTOM_PARAM2', value: params.CUSTOM_PARAM2],
+                                    [$class: 'StringParameterValue', name: 'CUSTOM_PARAM3', value: params.CUSTOM_PARAM3],
+                                    [$class: 'StringParameterValue', name: 'CUSTOM_PARAM4', value: params.CUSTOM_PARAM4]
+                            ])
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private String determinePrJobName() {
+    int branchOffset
+    if (env.JOB_BASE_NAME == env.BRANCH_NAME) {
+        branchOffset = 1
+    } else {
+        branchOffset = 0
+    }
+    List<String> parts = JOB_NAME.split('/')
+    parts[parts.size() - 1 - branchOffset] = 'Pr'
+    return parts.join('/')
+}
