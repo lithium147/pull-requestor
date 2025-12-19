@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-UTIL_PATH=$(dirname "$0")/../util
 SCRIPT_PATH=$(dirname "$0")
+# util path might be one level up
+if [ -e $(dirname "$0")/../../util ]; then
+  UTIL_PATH=$(dirname "$0")/../../util
+else
+  UTIL_PATH=$(dirname "$0")/../util
+fi
 
 # Handle the different ways of running `sed` without generating a backup file based on OS
 # - GNU sed (Linux) uses `-i`

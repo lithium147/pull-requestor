@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 shopt -s globstar
 
-UTIL_PATH=$(dirname "$0")/../util
+# util path might be one level up
+if [ -e $(dirname "$0")/../../util ]; then
+  UTIL_PATH=$(dirname "$0")/../../util
+else
+  UTIL_PATH=$(dirname "$0")/../util
+fi
 
 # for mac
 #setopt extended_glob
