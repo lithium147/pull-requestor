@@ -1,0 +1,28 @@
+target/
+logs/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.classpath
+.project
+.git-credentials
+.attach_pid*
+/bin/
+*.iml
+.idea/
+# package/db-package should be created in target dir, so it's auto-excluded
+package/
+db-package/
+package.zip
+db-package.zip
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!/.mvn/wrapper/maven-wrapper.jar
+
+# added to root dir during jenkins build
+secret-sa.json
