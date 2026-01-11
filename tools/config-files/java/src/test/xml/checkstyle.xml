@@ -34,6 +34,8 @@
         <property name="severity" value="info"/>
     </module>
 
+    <module name="NoCodeInFile"/>
+
     <module name="TreeWalker">
         <module name="IllegalImport">
             <!-- Use java config to create beans, not component scanning -->
@@ -300,5 +302,14 @@
                       default="checkstyle-xpath-suppressions.xml"/>
             <property name="optional" value="true"/>
         </module>
+        <!-- since version 10 -->
+        <module name="UnnecessaryNullCheckWithInstanceOf"/>
+        <module name="PatternVariableAssignment"/>
+        <module name="HexLiteralCase"/>
+        <module name="TextBlockGoogleStyleFormatting"/>
+        <!-- since version 8 -->
+        <module name="JavadocMissingWhitespaceAfterAsterisk"/>
+        <module name="JavadocContentLocation"/>
+        <module name="JavadocMissingLeadingAsterisk"/>
     </module>
 </module>
