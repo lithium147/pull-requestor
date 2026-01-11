@@ -15,3 +15,5 @@ $SCRIPT_PATH/replace-parenthesis.sh "$f"
 echo -n '.'
 $SCRIPT_PATH/remove-public-in-interface.sh "$f"
 echo -n '.'
+$SCRIPT_PATH/no-same-line-annotations.sh "$f"
+echo -n '.'
