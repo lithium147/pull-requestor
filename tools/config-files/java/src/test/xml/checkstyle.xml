@@ -37,7 +37,8 @@
     <module name="TreeWalker">
         <module name="IllegalImport">
             <!-- Use java config to create beans, not component scanning -->
-            <property name="illegalClasses" value="org.springframework.stereotype.Service,org.springframework.stereotype.Component,org.springframework.http.HttpEntity"/>
+            <property name="illegalClasses"
+                      value="org.springframework.stereotype.Service,org.springframework.stereotype.Component,org.springframework.http.HttpEntity"/>
         </module>
         <module name="OuterTypeFilename"/>
         <module name="IllegalTokenText">
@@ -245,8 +246,10 @@
         </module>
         <module name="AnnotationLocation">
             <property name="id" value="AnnotationLocationMostCases"/>
-            <property name="tokens"
-                      value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF"/>
+            <property name="tokens" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF"/>
+            <property name="allowSamelineMultipleAnnotations" value="false"/>
+            <property name="allowSamelineSingleParameterlessAnnotation" value="false"/>
+            <property name="allowSamelineParameterizedAnnotation" value="false"/>
         </module>
         <module name="AnnotationLocation">
             <property name="id" value="AnnotationLocationVariables"/>
