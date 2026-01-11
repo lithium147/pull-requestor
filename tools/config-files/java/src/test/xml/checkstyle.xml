@@ -245,6 +245,7 @@
                     METHOD_DEF, QUESTION, RESOURCE_SPECIFICATION, SUPER_CTOR_CALL, LAMBDA"/>
         </module>
         <module name="AnnotationLocation">
+            <!-- doesn't detect when annotation is after a modifier like public, but still useful -->
             <property name="id" value="AnnotationLocationMostCases"/>
             <property name="tokens" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF"/>
             <property name="allowSamelineMultipleAnnotations" value="false"/>
