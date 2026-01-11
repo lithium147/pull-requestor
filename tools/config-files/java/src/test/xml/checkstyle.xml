@@ -34,8 +34,6 @@
         <property name="severity" value="info"/>
     </module>
 
-    <module name="NoCodeInFile"/>
-
     <module name="TreeWalker">
         <module name="IllegalImport">
             <!-- Use java config to create beans, not component scanning -->
@@ -308,6 +306,7 @@
         <module name="HexLiteralCase"/>
         <module name="TextBlockGoogleStyleFormatting"/>
         <!-- since version 8 -->
+        <module name="NoCodeInFile"/>
         <module name="JavadocMissingWhitespaceAfterAsterisk"/>
         <module name="JavadocContentLocation"/>
         <module name="JavadocMissingLeadingAsterisk"/>
