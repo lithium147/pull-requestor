@@ -49,3 +49,9 @@ replaceMultiline "$modifiers"'[[:space:]]+' '\1\3 \2 \4'
 
 # move the annotation to it's own line
 replaceMultiline '' '\1\2\n\1\3'
+
+# It now fixes the same line annotations even when the method is wrapped
+# But the param line will still get messed up as it will get picked up by the last step
+# perhaps need to use bracket matching
+
+# TODO moving out the annotation also messes up white space of subsequent method params for wrapped lines
