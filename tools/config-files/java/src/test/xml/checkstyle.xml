@@ -325,5 +325,13 @@
             <property name="ignoreComments" value="true"/>
             <property name="illegalPattern" value="true"/>
         </module>
+        <!-- Don't allow log messages to be constants -->
+        <module name="RegexpSinglelineJava">
+            <property name="message"
+                      value="A log message should never be extracted as a constant as it makes the code unreadable"/>
+            <property name="format" value=" static .*\{\}"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
     </module>
 </module>
