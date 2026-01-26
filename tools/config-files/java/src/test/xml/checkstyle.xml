@@ -331,7 +331,6 @@
                       value="A log message should never be extracted as a constant as it makes the code unreadable"/>
             <property name="format" value=" static .*\{\}"/>
             <property name="ignoreComments" value="true"/>
-            <property name="illegalPattern" value="true"/>
         </module>
     </module>
 </module>
