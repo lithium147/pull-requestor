@@ -312,5 +312,18 @@
         <module name="JavadocMissingWhitespaceAfterAsterisk"/>
         <module name="JavadocContentLocation"/>
         <module name="JavadocMissingLeadingAsterisk"/>
+        <!-- Don't allow blank lines around a code block -->
+        <module name="Regexp">
+            <property name="message" value="Blank line at start of block is not allowed"/>
+            <property name="format" value="\{\s*$\s*^\s*$"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
+        <module name="Regexp">
+            <property name="message" value="Blank line at end of block is not allowed"/>
+            <property name="format" value="^\s*$\s*^\s*\}"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
     </module>
 </module>
