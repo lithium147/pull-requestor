@@ -25,6 +25,9 @@ sed "${SED_OPTIONS[@]}" 's/, ((@[0-9A-Za-z_]+(\([^)]*\))? )*)final ([^)]*)\)/, \
 
 sed "${SED_OPTIONS[@]}" 's/([[:space:]]*)final var/\1var/g' $f # final var
 
+# if (value instanceof final String stringValue) {
+sed "${SED_OPTIONS[@]}" 's/([[:space:]]*)instanceof final /\1instanceof /g' $f
+
 # to catch final local fields, assume they don't have a modifier
 # also catch multiline final params
 sed "${SED_OPTIONS[@]}" '/(private|protected|static|transient|volatile)/!s/^([[:space:]]*)((@[0-9A-Za-z_]+(\([^)]*\))? )*)final (.*)$/\1\2\5/g' $f
